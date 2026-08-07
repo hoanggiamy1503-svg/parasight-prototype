@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ParaSight — Smart NIR Meat Freshness Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080a09;
+    --panel:#101312;
+    --panel-2:#161a18;
+    --border:rgba(255,255,255,0.09);
+    --border-strong:rgba(255,255,255,0.16);
+    --green:#8CFF7A;
+    --green-dim:#4E8C46;
+    --green-glow:rgba(140,255,122,0.18);
+    --text:#EDEFEA;
+    --text-secondary:#9BA199;
+    --text-muted:#6A716A;
+    --red:#FF6B6B;
+    --amber:#FFC24B;
+    --mono:'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    --sans:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1560px; margin:0 auto; padding:44px 40px 0;}
+
+  /* ---------- header ---------- */
+  .brand{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;}
+  .brand h1{font-size:38px; font-weight:800; letter-spacing:-0.01em; margin:0;}
+  .brand .tag{font-family:var(--mono); font-size:13px; color:var(--green); letter-spacing:.04em; text-transform:uppercase;}
+  .desc{max-width:640px; color:var(--text-secondary); font-size:14.5px; line-height:1.6; margin:14px 0 0;}
+
+  .spec-row{display:flex; gap:36px; flex-wrap:wrap; margin-top:28px; padding:22px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+  .spec-item{display:flex; gap:10px; align-items:flex-start;}
+  .spec-item svg{width:20px; height:20px; color:var(--text-secondary); flex-shrink:0; margin-top:1px;}
+  .spec-item .label{font-family:var(--mono); font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; display:block;}
+  .spec-item .value{font-size:14px; font-weight:600; margin-top:2px;}
+
+  /* ---------- columns ---------- */
+  .columns{display:grid; grid-template-columns:1.1fr 1fr 1fr; margin-top:0; border-top:1px solid var(--border);}
+  .col{padding:30px 30px 40px; border-right:1px solid var(--border);}
+  .col:last-child{border-right:none;}
+  .col-title{font-family:var(--mono); font-size:12.5px; letter-spacing:.09em; color:var(--green); text-transform:uppercase; margin:0 0 20px; display:flex; align-items:center; gap:9px;}
+  .col-title::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 9px var(--green-glow), 0 0 3px var(--green);}
+  .col-sub{font-family:var(--mono); font-size:12.5px; letter-spacing:.09em; color:var(--text-secondary); text-transform:uppercase; margin:30px 0 16px;}
+
+  /* device views */
+  .device-views{display:flex; gap:10px;}
+  .device-views svg{width:100%; height:auto;}
+  .device-views .v1{flex:1.35;}
+  .device-views .v2{flex:1;}
+
+  .dim-note{font-family:var(--mono); font-size:11px; color:var(--text-muted); text-align:center; margin-top:6px;}
+
+  /* exploded view */
+  .exploded-row{display:grid; grid-template-columns:repeat(3,1fr); gap:12px 10px; margin-top:4px;}
+  .exploded-item{text-align:center;}
+  .exploded-item .box{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:10px 4px; height:66px; display:flex; align-items:center; justify-content:center;}
+  .exploded-item svg{width:100%; height:44px; color:var(--text-secondary);}
+  .exploded-item .name{font-size:11px; font-weight:600; margin-top:8px;}
+  .exploded-item .sub{font-size:9.5px; color:var(--text-muted); margin-top:2px; line-height:1.4;}
+
+  .stat-mini-row{display:grid; grid-template-columns:repeat(2,1fr); gap:10px 20px; margin-top:6px;}
+  .stat-mini{display:flex; gap:10px; align-items:flex-start;}
+  .stat-mini svg{width:17px; height:17px; color:var(--text-secondary); margin-top:1px; flex-shrink:0;}
+  .stat-mini .label{font-family:var(--mono); font-size:9.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; display:block;}
+  .stat-mini .value{font-size:12.5px; font-weight:600; margin-top:1px;}
+
+  /* step cards */
+  .step-card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 16px 16px 14px; margin-bottom:12px; display:flex; gap:13px; align-items:flex-start;}
+  .step-num{width:24px; height:24px; border-radius:50%; border:1px solid var(--green-dim); color:var(--green); font-family:var(--mono); font-weight:600; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;}
+  .step-body{flex:1; min-width:0;}
+  .step-body h4{font-size:13.5px; margin:0 0 5px; font-weight:700; letter-spacing:.01em;}
+  .step-body p{font-size:12px; color:var(--text-secondary); line-height:1.55; margin:0;}
+  .step-icon{width:42px; height:42px; flex-shrink:0; color:var(--text-secondary); margin-top:2px;}
+
+  /* compatibility */
+  .compat-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px;}
+  .compat-box{border:1px solid var(--border); border-radius:10px; padding:13px;}
+  .compat-box.good{border-color:rgba(140,255,122,0.28); background:rgba(140,255,122,0.04);}
+  .compat-box.bad{border-color:rgba(255,107,107,0.28); background:rgba(255,107,107,0.04);}
+  .compat-box h5{margin:0 0 8px; font-size:11.5px; display:flex; gap:6px; align-items:center; font-weight:700;}
+  .compat-box h5.good{color:var(--green);}
+  .compat-box h5.bad{color:var(--red);}
+  .compat-box ul{margin:0; padding:0; list-style:none;}
+  .compat-box li{font-size:11px; color:var(--text-secondary); margin-bottom:5px; display:flex; gap:6px; line-height:1.4;}
+  .compat-box li svg{width:12px; height:12px; flex-shrink:0; margin-top:2px;}
+
+  /* trust score legend */
+  .trust-box{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:13px; margin-top:4px;}
+  .trust-box .row{display:flex; align-items:center; gap:8px; margin-bottom:7px; font-size:11.5px; color:var(--text-secondary);}
+  .trust-box .dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .trust-box .note{font-size:10.5px; color:var(--text-muted); margin-top:8px; padding-top:8px; border-top:1px solid var(--border); line-height:1.5;}
+
+  /* clamp illustration + width bar */
+  .clamp-illustration{width:100%; height:auto;}
+  .width-bar{margin:16px 0 26px;}
+  .width-track{height:6px; background:var(--panel-2); border:1px solid var(--border); border-radius:3px; position:relative;}
+  .width-fill{position:absolute; left:14%; right:14%; top:-1px; bottom:-1px; background:var(--green-dim); border-radius:3px; opacity:.55;}
+  .width-labels{display:flex; justify-content:space-between; margin-top:8px; font-family:var(--mono); font-size:11px; color:var(--text-secondary);}
+  .width-labels b{color:var(--text);}
+  .width-caption{font-family:var(--mono); font-size:10.5px; color:var(--text-muted); text-align:center; margin-top:6px; text-transform:uppercase; letter-spacing:.04em;}
+
+  .feature-row{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:22px; padding-top:20px; border-top:1px solid var(--border);}
+  .feature-item{text-align:center;}
+  .feature-item svg{width:22px; height:22px; color:var(--green); margin-bottom:7px;}
+  .feature-item .t{font-size:10.5px; font-weight:600; line-height:1.3;}
+
+  /* footer */
+  .footer{display:flex; gap:10px; align-items:flex-start; padding:22px 40px; margin-top:0; border-top:1px solid var(--border); color:var(--text-muted); font-size:12px; max-width:1560px; margin-left:auto; margin-right:auto;}
+  .footer svg{width:15px; height:15px; flex-shrink:0; margin-top:1px; color:var(--text-muted);}
+
+  @media (max-width:1080px){
+    .columns{grid-template-columns:1fr;}
+    .col{border-right:none; border-bottom:1px solid var(--border);}
+  }
+</style>
+</head>
+<body>
+
+<!-- shared icon symbols -->
+<svg width="0" height="0" style="position:absolute">
+<defs>
+  <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3 16 L16 3 L21 8 L8 21 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 13l2 2M11 10l2 2M14 7l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-weight" viewBox="0 0 24 24"><path d="M12 3v3M8 6h8l3 14H5L8 6Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="20" y="11" width="2" height="3" fill="currentColor"/><rect x="5.5" y="10.5" width="9" height="4" fill="currentColor" opacity=".6"/></symbol>
+  <symbol id="i-bt" viewBox="0 0 24 24"><path d="M8 7l8 6-4 3v-14l4 3-8 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3c4 5 7 8.5 7 12a7 7 0 1 1-14 0c0-3.5 3-7 7-12Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+  <symbol id="i-usb" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="7" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="12.5" x2="16" y2="12.5" stroke="currentColor" stroke-width="1.3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-scans" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="i-led" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="19" x2="14" y2="19" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-pack" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6 8h12M9 4.5v4M15 4.5v4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 5v2.5M12 16.5V19M5 12h2.5M16.5 12H19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.6 7.6l1.4 1.4M16.4 7.6l-1.4 1.4M7.6 16.4l1.4-1.4M16.4 16.4l-1.4-1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".55"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 16l4-5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="16" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-openjaw" viewBox="0 0 24 24"><path d="M4 6h5M4 6v3M19 6h-5M19 6v3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 18h5M4 18v-3M19 18h-5M19 18v-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 8l-2 2M15 8l2 2M9 16l-2-2M15 16l2-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".6"/></symbol>
+  <symbol id="i-slide" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4 12h2M18 12h2M12 4v-1M12 22v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M3 12l1.5-1.5M3 12l1.5 1.5M21 12l-1.5-1.5M21 12l-1.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="15" r="1.4" fill="currentColor"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5M20 12a8 8 0 0 1-14 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-nowrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0-5.4 5L4 16.6 7.4 20l5.1-5.1a4 4 0 0 0 5-5.4l-3 3-2-2 3-3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.4"/><line x1="12" y1="11" x2="12" y2="16.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor"/></symbol>
+</defs>
+</svg>
+
+<div class="page">
+
+  <!-- ================= HEADER ================= -->
+  <div class="brand">
+    <h1>ParaSight</h1>
+    <span class="tag">Smart NIR meat freshness scanner</span>
+  </div>
+  <p class="desc">Pocket-sized clip-on scanner that uses Near-Infrared multispectral spectroscopy and an on-device AI model to evaluate meat freshness through unopened packaging.</p>
+
+  <div class="spec-row">
+    <div class="spec-item"><svg><use href="#i-ruler"/></svg><div><span class="label">Size</span><span class="value">60 × 45 × 20 mm</span></div></div>
+    <div class="spec-item"><svg><use href="#i-weight"/></svg><div><span class="label">Weight</span><span class="value">60–70 g</span></div></div>
+    <div class="spec-item"><svg><use href="#i-battery"/></svg><div><span class="label">Battery</span><span class="value">1000 mAh</span></div></div>
+    <div class="spec-item"><svg><use href="#i-bt"/></svg><div><span class="label">Connection</span><span class="value">BLE 5.3</span></div></div>
+    <div class="spec-item"><svg><use href="#i-drop"/></svg><div><span class="label">Ingress</span><span class="value">~IP54 splash resistant</span></div></div>
+    <div class="spec-item"><svg><use href="#i-usb"/></svg><div><span class="label">Charging</span><span class="value">USB-C (charge only)</span></div></div>
+  </div>
+
+  <!-- ================= COLUMNS ================= -->
+  <div class="columns">
+
+    <!-- ---------- LEFT: DEVICE OVERVIEW ---------- -->
+    <div class="col">
+      <p class="col-title">Device overview</p>
+
+      <div class="device-views">
+        <svg class="v1" viewBox="0 0 380 270">
+          <rect x="20" y="18" width="160" height="224" rx="28" fill="var(--panel-2)" stroke="var(--border-strong)" stroke-width="1.5"/>
+          <circle cx="100" cy="130" r="48" fill="none" stroke="var(--text-secondary)" stroke-width="1.4"/>
+          <circle cx="100" cy="130" r="34" fill="#0a0d0c" stroke="var(--green-dim)" stroke-width="1.2"/>
+          <circle cx="100" cy="130" r="13" fill="#05100a" stroke="var(--green)" stroke-width="1.4"/>
+          <circle cx="100" cy="72" r="3" fill="var(--green)"/><circle cx="129" cy="80" r="3" fill="var(--green)"/>
+          <circle cx="150" cy="101" r="3" fill="var(--green)"/><circle cx="158" cy="130" r="3" fill="var(--green)"/>
+          <circle cx="150" cy="159" r="3" fill="var(--green)"/><circle cx="129" cy="180" r="3" fill="var(--green)"/>
+          <circle cx="100" cy="188" r="3" fill="var(--green)"/><circle cx="71" cy="180" r="3" fill="var(--green)"/>
+          <circle cx="50" cy="159" r="3" fill="var(--green)"/><circle cx="42" cy="130" r="3" fill="var(--green)"/>
+          <circle cx="50" cy="101" r="3" fill="var(--green)"/><circle cx="71" cy="80" r="3" fill="var(--green)"/>
+          <circle cx="150" cy="45" r="5" fill="var(--panel-2)" stroke="var(--text-secondary)" stroke-width="1.3"/>
+          <rect x="85" y="8" width="30" height="13" rx="5" fill="none" stroke="var(--text-muted)" stroke-width="1.2"/>
+          <circle cx="35" cy="35" r="2.4" fill="var(--text-muted)"/><circle cx="165" cy="35" r="2.4" fill="var(--text-muted)"/>
+          <circle cx="35" cy="225" r="2.4" fill="var(--text-muted)"/><circle cx="165" cy="225" r="2.4" fill="var(--text-muted)"/>
+
+          <line x1="150" y1="45" x2="235" y2="42" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="240" y="46" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Ambient light sensor</text>
+
+          <line x1="100" y1="72" x2="235" y2="90" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="240" y="94" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">12× 940 nm NIR LEDs</text>
+
+          <line x1="100" y1="130" x2="235" y2="140" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="240" y="144" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Optical window</text>
+
+          <line x1="165" y1="35" x2="235" y2="190" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="240" y="194" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Stainless screws ×4</text>
+
+          <line x1="100" y1="10" x2="235" y2="228" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="240" y="232" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Adjustable clamp mount</text>
+        </svg>
+
+        <svg class="v2" viewBox="0 0 220 270">
+          <path d="M55 4h80v22H55Z" fill="none" stroke="var(--text-muted)" stroke-width="1.2"/>
+          <path d="M63 4v-4M75 4v-4M87 4v-4M99 4v-4M111 4v-4M123 4v-4" stroke="var(--text-muted)" stroke-width="1" opacity=".7"/>
+          <rect x="70" y="18" width="50" height="224" rx="18" fill="var(--panel-2)" stroke="var(--border-strong)" stroke-width="1.5"/>
+          <rect x="58" y="118" width="12" height="44" rx="4" fill="none" stroke="var(--text-secondary)" stroke-width="1.3"/>
+          <rect x="82" y="222" width="26" height="10" rx="3" fill="var(--panel)" stroke="var(--green-dim)" stroke-width="1.2"/>
+          <circle cx="118" cy="227" r="3" fill="var(--green)"/>
+
+          <line x1="95" y1="15" x2="180" y2="26" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="10" y="255" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Side profile</text>
+          <text x="150" y="30" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Universal clamp</text>
+
+          <line x1="58" y1="140" x2="10" y2="165" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="10" y="180" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">20 mm spacer ring</text>
+
+          <line x1="108" y1="227" x2="180" y2="248" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+          <text x="130" y="262" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">USB-C + status LED</text>
+        </svg>
+      </div>
+      <p class="dim-note">Two-piece recycled/virgin ABS housing · matte scratch-resistant finish</p>
+
+      <p class="col-sub">Exploded view</p>
+      <div class="exploded-row">
+        <div class="exploded-item">
+          <div class="box"><svg viewBox="0 0 80 60"><rect x="14" y="8" width="40" height="44" rx="9" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="26" y="8" width="40" height="44" rx="9" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3" opacity=".7"/></svg></div>
+          <p class="name">Protective casing</p><p class="sub">30% recycled + 70% virgin ABS</p>
+        </div>
+        <div class="exploded-item">
+          <div class="box"><svg viewBox="0 0 80 60"><circle cx="40" cy="30" r="20" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <circle cx="40" cy="10" r="2.2" fill="currentColor"/><circle cx="55" cy="16" r="2.2" fill="currentColor"/><circle cx="60" cy="30" r="2.2" fill="currentColor"/><circle cx="55" cy="44" r="2.2" fill="currentColor"/><circle cx="40" cy="50" r="2.2" fill="currentColor"/><circle cx="25" cy="44" r="2.2" fill="currentColor"/><circle cx="20" cy="30" r="2.2" fill="currentColor"/><circle cx="25" cy="16" r="2.2" fill="currentColor"/></svg></div>
+          <p class="name">Illumination halo</p><p class="sub">12× NIR LEDs, 940 nm</p>
+        </div>
+        <div class="exploded-item">
+          <div class="box"><svg viewBox="0 0 80 60"><circle cx="40" cy="30" r="19" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="40" cy="30" r="11" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="40" cy="30" r="4" fill="currentColor"/></svg></div>
+          <p class="name">Optical module</p><p class="sub">Replaceable cartridge</p>
+        </div>
+        <div class="exploded-item">
+          <div class="box"><svg viewBox="0 0 80 60"><circle cx="40" cy="30" r="18" fill="none" stroke="currentColor" stroke-width="1.4"/><line x1="28" y1="20" x2="34" y2="14" stroke="currentColor" stroke-width="1.2" opacity=".7"/></svg></div>
+          <p class="name">Optical glass</p><p class="sub">Scratch protection</p>
+        </div>
+        <div class="exploded-item">
+          <div class="box"><svg viewBox="0 0 80 60"><rect x="10" y="14" width="34" height="32" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M16 22h22M16 28h22M16 34h14" stroke="currentColor" stroke-width="1"/><rect x="48" y="18" width="20" height="24" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></div>
+          <p class="name">PCB & battery</p><p class="sub">Electronics · 1000 mAh</p>
+        </div>
+        <div class="exploded-item">
+          <div class="box"><svg viewBox="0 0 80 60"><rect x="14" y="8" width="52" height="44" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="30" y="42" width="20" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/></svg></div>
+          <p class="name">Back cover</p><p class="sub">With silicone gasket</p>
+        </div>
+      </div>
+
+      <div class="stat-mini-row">
+        <div class="stat-mini"><svg><use href="#i-scans"/></svg><div><span class="label">Per charge</span><span class="value">250–300 scans</span></div></div>
+        <div class="stat-mini"><svg><use href="#i-clock"/></svg><div><span class="label">Continuous use</span><span class="value">~6 hours</span></div></div>
+        <div class="stat-mini"><svg><use href="#i-battery"/></svg><div><span class="label">Full charge</span><span class="value">~90 minutes</span></div></div>
+        <div class="stat-mini"><svg><use href="#i-led"/></svg><div><span class="label">Status LED</span><span class="value">Charging / full / low</span></div></div>
+      </div>
+    </div>
+
+    <!-- ---------- MIDDLE: HOW TO USE ON A PHONE ---------- -->
+    <div class="col">
+      <p class="col-title">How to use on a phone</p>
+
+      <div class="step-card">
+        <span class="step-num">1</span>
+        <div class="step-body"><h4>Attach to your phone</h4><p>Open the spring-loaded clamp and center it on the top edge of your phone (fits 67–90 mm widths), with the optical module opposite your camera.</p></div>
+        <svg class="step-icon"><use href="#i-phone"/></svg>
+      </div>
+      <div class="step-card">
+        <span class="step-num">2</span>
+        <div class="step-body"><h4>Align with the camera</h4><p>In the app, use the ±8 mm horizontal and ±5 mm vertical sliders to center the optical window over your lens, then lock the detent.</p></div>
+        <svg class="step-icon"><use href="#i-target"/></svg>
+      </div>
+      <div class="step-card">
+        <span class="step-num">3</span>
+        <div class="step-body"><h4>Position above the meat</h4><p>Rest the scanner flat on the package. The built-in spacer ring keeps a fixed ~20 mm working distance and perpendicular angle.</p></div>
+        <svg class="step-icon"><use href="#i-pack"/></svg>
+      </div>
+      <div class="step-card">
+        <span class="step-num">4</span>
+        <div class="step-body"><h4>Tap to scan</h4><p>The 12 NIR LEDs illuminate the surface while the sensor captures the spectrum; data streams to your phone over BLE 5.3.</p></div>
+        <svg class="step-icon"><use href="#i-scan"/></svg>
+      </div>
+      <div class="step-card">
+        <span class="step-num">5</span>
+        <div class="step-body"><h4>View your Trust Score™</h4><p>The on-device AI model returns a 0–100 freshness score with a Low, Moderate, or High risk category, plus scan history.</p></div>
+        <svg class="step-icon"><use href="#i-gauge"/></svg>
+      </div>
+
+      <p class="col-sub">Trust score™ risk categories</p>
+      <div class="trust-box">
+        <div class="row"><span class="dot" style="background:var(--green)"></span> Low risk — fresher spectral profile</div>
+        <div class="row"><span class="dot" style="background:var(--amber)"></span> Moderate risk — proceed with caution</div>
+        <div class="row"><span class="dot" style="background:var(--red)"></span> High risk — spoilage indicators present</div>
+        <p class="note">The Trust Score is a confidence-based estimate from validated spectral data — a scientific assessment, not a guarantee of food safety.</p>
+      </div>
+
+      <p class="col-sub">Packaging compatibility</p>
+      <div class="compat-row">
+        <div class="compat-box good">
+          <h5 class="good"><svg><use href="#i-check"/></svg>Works best with</h5>
+          <ul><li><svg><use href="#i-check"/></svg>Thin transparent plastic film (PE, PET, PVC)</li></ul>
+        </div>
+        <div class="compat-box bad">
+          <h5 class="bad"><svg><use href="#i-x"/></svg>Not supported</h5>
+          <ul><li><svg><use href="#i-x"/></svg>Opaque trays, foil, vacuum-metallic or thick multilayer film</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- RIGHT: ADJUSTABLE CLAMP ---------- -->
+    <div class="col">
+      <p class="col-title">How to use the adjustable clamp</p>
+
+      <svg class="clamp-illustration" viewBox="0 0 380 210">
+        <path d="M40 40 h60 a14 14 0 0 1 14 14 v14 h-14 v-10 a4 4 0 0 0 -4 -4 h-56 Z" fill="var(--panel-2)" stroke="var(--border-strong)" stroke-width="1.4"/>
+        <path d="M40 170 h60 a14 14 0 0 0 14 -14 v-14 h-14 v10 a4 4 0 0 1 -4 4 h-56 Z" fill="var(--panel-2)" stroke="var(--border-strong)" stroke-width="1.4"/>
+        <rect x="30" y="30" width="16" height="20" rx="4" fill="none" stroke="var(--green-dim)" stroke-width="1.4"/>
+        <rect x="30" y="160" width="16" height="20" rx="4" fill="none" stroke="var(--green-dim)" stroke-width="1.4"/>
+        <rect x="98" y="60" width="60" height="90" rx="10" fill="none" stroke="var(--text-secondary)" stroke-width="1.4" stroke-dasharray="3 4"/>
+        <circle cx="128" cy="105" r="4" fill="var(--green)"/>
+        <path d="M118 105h-14M138 105h14" stroke="var(--text-secondary)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M128 91v-14M128 119v14" stroke="var(--text-secondary)" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M104 92 l-6 -6 M104 92 l6 -6" stroke="var(--text-secondary)" stroke-width="1.2" fill="none"/>
+
+        <line x1="46" y1="34" x2="235" y2="18" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="240" y="22" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Silicone rubber pads</text>
+        <text x="240" y="36" font-size="10" font-family="var(--sans)" fill="var(--text-muted)">Protect the phone body</text>
+
+        <line x1="128" y1="70" x2="235" y2="70" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="240" y="74" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Two-axis sliding carriage</text>
+        <text x="240" y="88" font-size="10" font-family="var(--sans)" fill="var(--text-muted)">±8 mm horizontal, ±5 mm vertical</text>
+
+        <line x1="40" y1="45" x2="235" y2="125" stroke="var(--border-strong)" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="240" y="129" font-size="11" font-family="var(--sans)" fill="var(--text-secondary)">Spring-loaded clamp</text>
+        <text x="240" y="143" font-size="10" font-family="var(--sans)" fill="var(--text-muted)">Fits phones 67–90 mm wide</text>
+      </svg>
+
+      <div class="width-bar">
+        <div class="width-track"><div class="width-fill"></div></div>
+        <div class="width-labels"><span><b>67 mm</b> min</span><span><b>90 mm</b> max</span></div>
+        <p class="width-caption">Universal phone width range</p>
+      </div>
+
+      <div class="step-card">
+        <span class="step-num">1</span>
+        <div class="step-body"><h4>Open the jaws</h4><p>Squeeze the spring-loaded clamp so the silicone pads separate wide enough for your phone.</p></div>
+        <svg class="step-icon"><use href="#i-openjaw"/></svg>
+      </div>
+      <div class="step-card">
+        <span class="step-num">2</span>
+        <div class="step-body"><h4>Seat on the phone edge</h4><p>Slide it over the top edge and release — the pads press flush against both faces.</p></div>
+        <svg class="step-icon"><use href="#i-phone"/></svg>
+      </div>
+      <div class="step-card">
+        <span class="step-num">3</span>
+        <div class="step-body"><h4>Align the optical module</h4><p>Use the ±8 mm horizontal / ±5 mm vertical carriage to center the window over your camera.</p></div>
+        <svg class="step-icon"><use href="#i-slide"/></svg>
+      </div>
+      <div class="step-card">
+        <span class="step-num">4</span>
+        <div class="step-body"><h4>Lock and save</h4><p>Push until the detent clicks. The app remembers this alignment for next time on this phone.</p></div>
+        <svg class="step-icon"><use href="#i-lock"/></svg>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-item"><svg><use href="#i-phone"/></svg><p class="t">Universal fit</p></div>
+        <div class="feature-item"><svg><use href="#i-target"/></svg><p class="t">Precise alignment</p></div>
+        <div class="feature-item"><svg><use href="#i-shield"/></svg><p class="t">Repeatable results</p></div>
+        <div class="feature-item"><svg><use href="#i-nowrench"/></svg><p class="t">No tools required</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <svg><use href="#i-info"/></svg>
+    <span>For best results: keep the optical window clean, scan in 100–800 lux ambient light, and avoid direct sunlight or reflective glare on the packaging film.</span>
+  </div>
+
+</div>
+</body>
+</html>
